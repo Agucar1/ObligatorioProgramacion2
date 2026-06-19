@@ -1,12 +1,12 @@
 package uy.edu.um.tad.list;
 
-import lombok.Getter;
+/*import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor*/
 public class Node<T> {
 
     private T value;
@@ -15,5 +15,21 @@ public class Node<T> {
     public Node(T value) {
         this.value = value;
         this.next = null;
+    }
+
+    public T getValue() {
+        return value;
+    }
+
+    public void setValue(T value) {
+        this.value = value;
+    }
+
+    public Node<T> getNext() {
+        return next;
+    }
+
+    public void setNext(Node<T> next) {
+        this.next = next;
     }
 }

@@ -9,16 +9,27 @@ import uy.edu.um.tad.list.MyList;
 import uy.edu.um.tad.queue.EmptyQueueException;
 import uy.edu.um.tad.queue.MyQueue;
 import uy.edu.um.tad.queue.MyQueueImpl;
+import uy.edu.um.tad.stack.EmptyStackException;
+import uy.edu.um.tad.stack.MyStack;
+import uy.edu.um.tad.stack.MyStackImpl;
 import uy.edu.um.util.MyFileManager;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class ProcessManagerImpl implements ProcessManager{
     private MyFileManager fm = new MyFileManager();
     private MyHeap<Process> mayorPrioridad = new MyHeapImpl<>(false);
-
+    private MyStack<Process> finishedProcesses = new MyStackImpl<>();
     private MyHash<Integer,Process> procesosHash = new MyHashImpl<>();
     private MyHash<Integer, Users> userHash = new MyHashImpl<>();
     private MyQueue<Process> newProcesses = new MyQueueImpl<>();
     private Process runningProcess;
+    private final int stackMaximum = 3;
+    LocalDateTime now = LocalDateTime.now();
+    DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
 
     @Override
     // Carga procesos y usuarios desde archivos CSV
@@ -163,17 +174,27 @@ public class ProcessManagerImpl implements ProcessManager{
 
     @Override
     public void finishProcessOk() {
-        System.out.println("IMPLEMENTAR");
+        youVeBeenTerminated("OK");
+        runningProcess=null;
     }
 
     @Override
     public void finishProcessError() {
-        System.out.println("IMPLEMENTAR");
+        youVeBeenTerminated("ERROR");
+        runningProcess=null;
     }
 
     @Override
     public void terminateProcess(int uid) {
-        System.out.println("IMPLEMENTAR");
+        if (uid==0)
+            return;
+        Users usu = userHash.get(uid);
+        if(usu==null)
+            return;
+        youVeBeenTerminated("TERMINATED");
+        registrar("by USER:"+usu.getAlias()+" UID:"+uid);
+        runningProcess=null;
+
     }
 
     @Override
@@ -194,5 +215,37 @@ public class ProcessManagerImpl implements ProcessManager{
     @Override
     public void printStatusByProcess(int pid) {
         System.out.println("IMPLEMENTAR");
+    }
+
+    public void youVeBeenTerminated(String estado){
+        runningProcess.setState(estado);
+        LocalDateTime ahora = LocalDateTime.now();
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        if (finishedProcesses.size()>=stackMaximum){
+            System.out.println("["+ahora.format(formato)+"]: \u001B[33mFinished process stack overflow\u001B[0m");
+            registrar("["+ahora.format(formato)+"]: Finished process stack overflow");
+            while(!finishedProcesses.isEmpty()){
+                try{
+                    registrar(finishedProcesses.pop().toString());
+                } catch (EmptyStackException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        finishedProcesses.push(runningProcess);
+        registrar("["+ahora.format(formato)+"]: ENDING PROCESS: PID="+runningProcess.getPid()+ " | STATE: "+estado);
+    }
+
+    public void registrar(String mensaje){
+        String nombre = "DOORS_PROCESS_LOG_"+now.format(format)+".log";
+        try{
+            BufferedWriter bw = new BufferedWriter(new FileWriter(nombre, true));
+            bw.write(mensaje);
+            bw.newLine();
+            bw.close();
+        }catch(Exception e){
+            System.out.println("Excpeción");
+            e.printStackTrace();
+        }
     }
 }

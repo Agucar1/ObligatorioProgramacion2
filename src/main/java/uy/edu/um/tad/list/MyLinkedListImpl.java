@@ -1,12 +1,12 @@
 package uy.edu.um.tad.list;
 
-import lombok.Getter;
+//import lombok.Getter;
 
 public class MyLinkedListImpl<T> implements MyList<T>{
 
-    @Getter
+    //@Getter
     protected Node<T> first;
-    @Getter
+    //@Getter
     protected Node<T> last;
 
     public MyLinkedListImpl() {
@@ -104,6 +104,11 @@ public class MyLinkedListImpl<T> implements MyList<T>{
             size++;
         }
         return size;
+    }
+
+    @Override
+    public Node<T> getFirst() {
+        return null;
     }
 
     public boolean isEmpty() {
